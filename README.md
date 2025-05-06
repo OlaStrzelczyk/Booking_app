@@ -82,7 +82,7 @@ The application uses a MySQL database with three main tables:
 
 2. Matching offers appear with pricing and brief details.
 
-3. Clicking Zobacz szczegóły tej oferty shows a map and *Rezerwuj* button.
+3. Clicking *Zobacz szczegóły* tej oferty shows a map and *Rezerwuj* button.
 
 4. User fills in the reservation form with: Name, Surname, Email, Country, Phone number
 
