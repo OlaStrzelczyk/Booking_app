@@ -48,11 +48,7 @@ The application uses a MySQL database with three main tables:
 
 ## 🧪 How to Run Locally
 
-1. Clone this repository:
-
-   ```bash
-   git clone https://github.com/yourusername/vacation-booking.git
-   cd vacation-booking
+1. Clone this repository.
 
 2. Make sure you have:
 
