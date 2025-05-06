@@ -58,7 +58,7 @@ The application uses a MySQL database with three main tables:
 
 - phpMyAdmin access
 
-3. Import the SQL schema (not included here) into your MySQL via phpMyAdmin.
+3. Import the SQL schema into your MySQL via phpMyAdmin.
 
 4. Place the project files inside your web server root directory (e.g. htdocs/ for XAMPP).
 
