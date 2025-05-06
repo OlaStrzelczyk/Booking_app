@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rezerwacja noclegów</title>
+
+  <!-- Flatpickr CSS biblioteka do kalendarza -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_orange.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <style>
+    body {
+  font-family: Arial, sans-serif;
+  background-color: #fd8c4f;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+.container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+input, select, button {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+button {
+  background-color: #fd8c4f;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #fd8c4f;
+}
+
+.hotel-card {
+  border: 1px solid #ddd;
+  padding: 16px;
+  margin: 8px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.hotel-card:hover {
+  transform: translateY(-4px);
+}
+
+.hotel-card img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.hidden {
+  display: none;
+}
+
+#map {
+  width: 100%;
+  height: 300px;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 10px;
+  }
+
+  button {
+    padding: 10px;
+  }
+
+  #map {
+    height: 200px;
+  }
+}
+
+#hotel-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 16px 0;
+  display: flex;
+    justify-content: center; /* Wyśrodkowanie w poziomie */
+    align-items: center; /* Wyśrodkowanie w pionie */
+}
+
+  </style>
+  <style>
+    body {
+    margin: 0;
+    padding: 0;
+    background-image: url('https://mobirobi.org/wp-content/uploads/2024/02/1k-1.jpg');
+    background-size: cover; /* Dopasowanie rozmiaru tła do strony */
+    background-position: center; /* Wyśrodkowanie obrazu */
+    background-repeat: no-repeat; /* Zapobieganie powtarzaniu obrazu */
+    height: 100vh; /* Ustawienie wysokości na całą stronę */
+  }
+
+  /* Styl kontenera formularza */
+  #search-container {
+    background: rgba(255, 255, 255, 0.8); /* Półprzezroczyste białe tło */
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 800px;
+    margin: 50px auto; /* Wyśrodkowanie kontenera */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Delikatny cień */
+  }
+
+  #search-form input, #search-form button {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  #search-form button {
+    background-color: #fd8c4f;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  #search-form button:hover {
+    background-color: #fd8c4f;
+  }
+  </style>
+</head>
+<body>
+  <!--kontener od wyszykiwania ofert-->
+  <div class="container" id="search-container">
+    <h1>Wyszukaj ofertę:</h1>
+    <form id="search-form">
+      <input type="text" id="destination" placeholder="Podaj miasto" required />
+      <input type="text" id="date-range" placeholder="Wybierz daty" required />
+      <input type="number" id="guests" placeholder="Podaj ilość dorosłych" min="1" required />
+      <input type="number" id="guests" placeholder="Podaj ilość dzieci" min="0" required />
+      <input type="number" id="guests" placeholder="Podaj ilość pokoi" min="1" required />
+      <button type="submit">Szukaj</button>
+    </form>
+    <div id="results"></div>
+  </div>
+  
+  <!--kontener z listą ofert-->
+  <div class="container hidden" id="details-container">
+    <h2 id="hotel-name"></h2>
+    <img id="hotel-image" src="" alt="Zdjęcie hotelu" />
+    <p id="hotel-description"></p>
+    <p id="hotel-cena"></p>
+    <p><strong>Maksymalna ilość osób dorosłych:</strong> <span id="hotel-max-os-doroslych"></span></p>
+    <div id="map"></div>
+    <button id="reserve-btn">Zarezerwuj</button>
+  </div>
+
+  <!--kontener z formularzem klienta-->
+  <div class="container hidden" id="reservation-form">
+    <h2>Wypełnij formularz rezerwacyjny:</h2>
+    <form id="reservation-details">
+      <input type="text" id="first-name" placeholder="Podaj imię" required />
+      <input type="text" id="last-name" placeholder="Podaj nazwisko" required />
+      <input type="email" id="email" placeholder="Podaj adres e-mail" required />
+      <input type="text" id="kraj_region" placeholder="Podaj kraj/region" required />
+      <input type="text" id="phone" placeholder="Podaj numer telefonu" required />
+      <button type="submit">Potwierdź rezerwację</button>
+    </form>
+  </div>
+
+  <script>
+
+document.getElementById("reserve-btn").addEventListener("click", () => {
+  detailsContainer.classList.add("hidden"); 
+  reservationForm.classList.remove("hidden");
+});
+
+
+    let selectedHotelId = null;
+    let selectedHotelCoords = null;
+
+    const searchContainer = document.getElementById("search-container");
+    const detailsContainer = document.getElementById("details-container");
+    const reservationForm = document.getElementById("reservation-form");
+    const form = document.getElementById("search-form");
+    const resultsContainer = document.getElementById("results");
+
+    /* od zakresu dat */
+    document.addEventListener("DOMContentLoaded", () => {
+      flatpickr("#date-range", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        locale: "pl",
+      });
+    });
+    
+    /* blokuje domyślnie wysyłanie formularza */
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const destination = document.getElementById("destination").value;
+      const dateRange = document.getElementById("date-range").value.split(" to ");
+      const guests = document.getElementById("guests").value;
+
+      if (dateRange.length !== 2) {
+        alert("Wybierz poprawny zakres dat!");
+        return;
+      }
+
+      const [startDate, endDate] = dateRange;
+
+      /* wysyła zapytanie do API na serwerze, przesyła miasto, daty i liczbę dorosłych gości,
+          oczekuje na odpowiedź zawierającą listę hoteli */
+      const response = await fetch("http://localhost:3072/wyszukaj", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          miasto: destination,
+          data_przyjazdu: startDate,
+          data_odjazdu: endDate,
+          max_os_doroslych: guests,
+        }),
+      });
+
+      const oferty = await response.json();
+
+      /* tworzy listę ofert na podstawie odpowiedzi z serwera, każdy hotel ma button zobacz szczegóły */
+      resultsContainer.innerHTML = oferty
+        .map(
+          (oferta) => `
+        <div class="hotel-card">
+          <h2>${oferta.nazwa}</h2>
+          <img src="${oferta.zdjecie}" alt="Zdjęcie hotelu" />
+          <p>${oferta.opis}</p>
+          <p>Cena za noc:${oferta.cena}zł</p>
+          <p>Maksymalna ilość osób doroslych: ${oferta.max_os_doroslych}</p>
+          <button onclick="viewDetails(${oferta.id_oferty}, '${oferta.lokalizacja}', '${oferta.nazwa}', '${oferta.zdjecie}', '${oferta.opis}', 'Cena za noc: ${oferta.cena}zł', ${oferta.max_os_doroslych})">Zobacz szczegóły</button>
+        </div>
+      `
+        )
+        .join("");
+    });
+
+    /* ukrywa formularz wyszukiwania, wyświetla szczegóły wybranego hotelu i używa Google Maps do pokazania lokalizacji hotelu */
+    function viewDetails(idOferty, coords, name, image, description, cena, maxOs) {
+      selectedHotelId = idOferty;
+      selectedHotelCoords = coords;
+
+      searchContainer.classList.add("hidden");
+      resultsContainer.innerHTML = "";
+
+      detailsContainer.classList.remove("hidden");
+      document.getElementById("hotel-name").innerText = name;
+      document.getElementById("hotel-image").src = image;
+      document.getElementById("hotel-description").innerText = description;
+      document.getElementById("hotel-cena").innerText = cena;
+      document.getElementById("hotel-max-os-doroslych").innerText = maxOs;
+
+      const [lat, lng] = coords.split(",").map((x) => parseFloat(x));
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat, lng },
+        zoom: 15,
+      });
+
+      new google.maps.Marker({
+        position: { lat, lng },
+        map,
+      });
+    }
+
+    document.getElementById("reserve-btn").addEventListener("click", () => {
+      detailsContainer.classList.add("hidden");
+      reservationForm.classList.remove("hidden");
+    });
+
+    document.getElementById("reservation-details").addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const firstName = document.getElementById("first-name").value;
+      const lastName = document.getElementById("last-name").value;
+      const email = document.getElementById("email").value;
+      const kraj_region = document.getElementById("kraj_region").value;
+      const phone = document.getElementById("phone").value;
+      const dateRange = document.getElementById("date-range").value.split(" to ");
+
+      if (dateRange.length !== 2 || !selectedHotelId) {
+        alert("Błąd w formularzu rezerwacji!");
+        return;
+      }
+
+      const [startDate, endDate] = dateRange;
+
+      /* wysyła dane rezerwacyjne do serwera, jeśli rezerwacja jest poprawna, wyświetla komunikat */
+      const response = await fetch("http://localhost:3072/rezerwacje", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          imie: firstName,
+          nazwisko: lastName,
+          email: email,
+          kraj_region,
+          nr_telefonu: phone,
+          id_oferty: selectedHotelId,
+          data_przyjazdu: startDate,
+          data_odjazdu: endDate,
+        }),
+      });
+
+      const result = await response.json();
+      alert(result.message || "Rezerwacja została dokonana!");
+      reservationForm.classList.add("hidden");
+      searchContainer.classList.remove("hidden");
+    });
+  </script>
+
+  <!-- Google Maps API -->
+  <script async src="https://maps.googleapis.com/maps/api/js?key=my_key"></script>
+</body>
+</html>
